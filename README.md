@@ -1,4 +1,4 @@
-# Avito Description Optimizer: Fine-Tuning Qwen 2.5 7B via Knowledge Distillation
+# Avito Description Enhancer: Fine-Tuning Qwen 2.5 7B via Knowledge Distillation
 
 A specialized LLM service designed to transform low-quality user-generated product descriptions into professional, structured, and selling ad copy for the **Avito** marketplace.
 
