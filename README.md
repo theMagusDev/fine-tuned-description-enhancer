@@ -18,7 +18,7 @@ The core approach relies on **Knowledge Distillation**: using a powerful "Teache
 ## 🛠 Tech Stack
 
 * **Base Model:** [Qwen 2.5 7B Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
-* **Training:** [Unsloth](https://github.com/unslothai/unsloth) (QLoRA, 4-bit quantization)
+* **Training:** QLoRA, 4-bit quantization
 * **Teacher Model:** DeepSeek V3.2 Speciale (via OpenRouter API)
 * **Libraries:** PyTorch, Transformers, PEFT, TRL, Datasets
 * **Metrics:** BERTScore, ROUGE-L, Structure Compliance Rate
@@ -33,9 +33,8 @@ The core approach relies on **Knowledge Distillation**: using a powerful "Teache
 
 ### 2. Fine-Tuning
 
-* Applied QLoRA (rank 16) using the **Unsloth** engine, which provided a 2x speedup in training.
-* Trained on a single **NVIDIA T4 GPU** (Kaggle environment) for ~40 minutes.
-* *Script:* `avito_desc_model_fine_tuning.py`
+* Applied QLoRA
+* Trained on a single **NVIDIA T4 GPU** (Kaggle environment)
 
 ### 3. Evaluation
 
@@ -45,6 +44,7 @@ The core approach relies on **Knowledge Distillation**: using a powerful "Teache
 ## 📂 Repository Structure
 
 * `avito_dataset_gen.py`: Script for synthetic data generation via API.
-* `avito_desc_model_fine_tuning.py`: Main training script with Unsloth optimizations.
+* `train.py`: Main training script.
 * `evaluation.py`: Quantitative assessment of model performance.
+* `data_utils.py`: Helpful functions for data processing. 
 * `requirements.txt`: List of necessary dependencies.
