@@ -4,7 +4,7 @@ A specialized LLM service designed to transform low-quality user-generated produ
 
 ## 📌 Project Overview
 
-User-generated content (UGC) often suffers from poor formatting, grammatical errors, and lack of structure. This project addresses these issues by fine-tuning a **Qwen 2.5 7B** model to act as a professional e-commerce copywriter.
+User-generated content often suffers from poor formatting, grammatical errors, and lack of structure. This project addresses these issues by fine-tuning a **Qwen 2.5 7B** model to act as a professional e-commerce copywriter.
 
 The core approach relies on **Knowledge Distillation**: using a powerful "Teacher" model (**DeepSeek V3.2 Speciale**) to generate high-quality training data for a smaller, more efficient "Student" model.
 
@@ -20,7 +20,7 @@ The core approach relies on **Knowledge Distillation**: using a powerful "Teache
 * **Base Model:** [Qwen 2.5 7B Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
 * **Training:** QLoRA, 4-bit quantization
 * **Teacher Model:** DeepSeek V3.2 Speciale (via OpenRouter API)
-* **Libraries:** PyTorch, Transformers, PEFT, TRL, Datasets
+* **Libraries:** PyTorch, Transformers, PEFT, Bitsandbytes, TRL, Datasets
 * **Metrics:** BERTScore, ROUGE-L, Structure Compliance Rate
 
 ## 📊 Pipeline Architecture
@@ -34,7 +34,7 @@ The core approach relies on **Knowledge Distillation**: using a powerful "Teache
 ### 2. Fine-Tuning
 
 * Applied QLoRA
-* Trained on a single **NVIDIA T4 GPU** (Kaggle environment)
+* Trained on two **Tesla T4 GPUs** (Kaggle environment)
 
 ### 3. Evaluation
 
