@@ -2,6 +2,12 @@
 
 A specialized LLM service designed to transform low-quality user-generated product descriptions into professional, structured, and selling ad copy for the **Avito** marketplace.
 
+## 🔗 Live Demo
+
+**Try it now on Google Colab:** [Avito Description Enhancer client](https://colab.research.google.com/drive/1E5yIj2imosq5qyugyMBix3pE0oRjWOs7?usp=sharing)
+
+*(No local setup required)*
+
 ## 📌 Project Overview
 
 User-generated content often suffers from poor formatting, grammatical errors, and lack of structure. This project addresses these issues by fine-tuning a **Qwen 2.5 7B** model to act as a professional e-commerce copywriter.
