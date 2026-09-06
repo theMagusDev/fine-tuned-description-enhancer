@@ -15,7 +15,6 @@ The model rewrites a title, category context, and original user description into
 ## 📌 Project Overview
 
 User-generated content often suffers from poor formatting, grammatical errors, and lack of structure. This project addresses these issues by fine-tuning a **Qwen 2.5 7B** model to act as a professional e-commerce copywriter.
->>>>>>> 93ad098ac323a8292b4265bbc47228960121d17f
 
 ## Dataset
 
