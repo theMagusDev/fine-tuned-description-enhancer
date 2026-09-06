@@ -6,6 +6,17 @@ Fine-tuning `Qwen/Qwen2.5-7B-Instruct` to improve Russian e-commerce and Avito p
 
 The model rewrites a title, category context, and original user description into clearer, more structured sales copy while following the facts supplied in the input. The project focuses on a reproducible QLoRA workflow that can be trained on modest cloud GPUs.
 
+## 🔗 Live Demo
+
+**Try it now on Google Colab:** [Avito Description Enhancer client](https://colab.research.google.com/drive/1E5yIj2imosq5qyugyMBix3pE0oRjWOs7?usp=sharing)
+
+*(No local setup required)*
+
+## 📌 Project Overview
+
+User-generated content often suffers from poor formatting, grammatical errors, and lack of structure. This project addresses these issues by fine-tuning a **Qwen 2.5 7B** model to act as a professional e-commerce copywriter.
+>>>>>>> 93ad098ac323a8292b4265bbc47228960121d17f
+
 ## Dataset
 
 The training dataset contains approximately 1.5k examples derived from open Avito data. Target descriptions were generated through knowledge distillation with DeepSeek V3.2 Speciale as the teacher model. The prepared dataset is published on [Kaggle](https://www.kaggle.com/datasets/yuriymagus/avito-descriptions-enhanced); a local copy can be placed at `data/descriptions_enhancement_avito.jsonl`.
