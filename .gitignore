@@ -23,3 +23,6 @@ archive.zip
 .*.sw?
 .cache
 .DS_Store
+checkpoints/
+data/*.jsonl
+differences.txt

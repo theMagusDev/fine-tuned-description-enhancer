@@ -7,7 +7,7 @@ import numpy as np
 from typing import Optional, Dict, List
 from tqdm.auto import tqdm
 from openai import OpenAI, APIError, RateLimitError, APITimeoutError
-from kaggle_secrets import UserSecretsClient
+
 
 class Config:
     # Paths
@@ -59,16 +59,34 @@ def setup_logging():
 
 logger = setup_logging()
 
+def get_openrouter_api_key():
+    """Read the OpenRouter key once from Kaggle Secrets or the environment."""
+    try:
+        from kaggle_secrets import UserSecretsClient
+    except ImportError:
+        api_key = os.getenv("OPENROUTER_KEY")
+    else:
+        try:
+            api_key = UserSecretsClient().get_secret("OPENROUTER_KEY")
+        except Exception:
+            api_key = os.getenv("OPENROUTER_KEY")
+
+    if not api_key:
+        raise RuntimeError(
+            "OpenRouter API key is missing. Configure the Kaggle secret "
+            "OPENROUTER_KEY or set the OPENROUTER_KEY environment variable."
+        )
+    return api_key
+
 def init_api_client():
     try:
-        user_secrets = UserSecretsClient()
-        api_key = user_secrets.get_secret("OPENROUTER_API_KEY")
+        api_key = get_openrouter_api_key()
         client = OpenAI(base_url=Config.API_BASE, api_key=api_key)
         logger.info("OpenAI client initialized successfully.")
         return client
     except Exception as e:
-        logger.error(f"Failed to retrieve API key: {e}")
-        raise e
+        logger.error(f"Failed to initialize OpenAI client: {e}")
+        raise
 
 client = init_api_client()
 

@@ -1,0 +1,64 @@
+{
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "adapter": "yuriy-magus/Qwen2.5-7B-Ecom-Refiner",
+  "base_model_revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+  "adapter_revision": "90630b282bc1aa49d1d4a6b670b365dbbaee6334",
+  "validation_size": 50,
+  "evaluation_split": "held-out validation split: df.iloc[-50:]",
+  "validation_set_fingerprint_sha256": "9ebf9d1cd1f1807f3fa41dc6af7c5d762272c920d7c8f38be1ab1ba1590d97fd",
+  "generation": {
+    "max_new_tokens": 256,
+    "do_sample": false,
+    "pad_token_id": 151645,
+    "eos_token_id": 151645,
+    "use_cache": true
+  },
+  "bertscore_model_type": "bert-base-multilingual-cased",
+  "library_versions": {
+    "transformers": "5.16.1",
+    "peft": "0.20.0",
+    "bitsandbytes": "0.50.2",
+    "evaluate": "0.4.6",
+    "bert-score": "0.3.13"
+  },
+  "format_compliance": null,
+  "format_compliance_note": "No objective binary format is defined by the training instruction; the previously reported 91% figure has no reproducible procedure in the project artifacts and is excluded.",
+  "statistical_significance_tested": false,
+  "metrics": [
+    {
+      "Metric": "BERTScore Precision",
+      "Base": 0.656464284658432,
+      "Fine-tuned": 0.7640395236015319,
+      "Absolute delta": 0.10757523894309995,
+      "Relative uplift": 16.38706651026307
+    },
+    {
+      "Metric": "BERTScore Recall",
+      "Base": 0.7142454588413238,
+      "Fine-tuned": 0.757858680486679,
+      "Absolute delta": 0.043613221645355194,
+      "Relative uplift": 6.106195160989364
+    },
+    {
+      "Metric": "BERTScore F1",
+      "Base": 0.6839911985397339,
+      "Fine-tuned": 0.7607289385795594,
+      "Absolute delta": 0.07673774003982547,
+      "Relative uplift": 11.219112205486615
+    },
+    {
+      "Metric": "ROUGE-1",
+      "Base": 0.4349738394353,
+      "Fine-tuned": 0.6158103509837256,
+      "Absolute delta": 0.18083651154842562,
+      "Relative uplift": 41.57411208526808
+    },
+    {
+      "Metric": "ROUGE-L",
+      "Base": 0.4324388758638252,
+      "Fine-tuned": 0.5954633292404191,
+      "Absolute delta": 0.16302445337659394,
+      "Relative uplift": 37.69884311417234
+    }
+  ]
+}

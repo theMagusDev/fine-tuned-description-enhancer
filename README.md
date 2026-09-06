@@ -1,50 +1,95 @@
-# Avito Description Enhancer: Fine-Tuning Qwen 2.5 7B via Knowledge Distillation
+# Avito Description Enhancer
 
-A specialized LLM service designed to transform low-quality user-generated product descriptions into professional, structured, and selling ad copy for the **Avito** marketplace.
+Fine-tuning `Qwen/Qwen2.5-7B-Instruct` to improve Russian e-commerce and Avito product descriptions under limited GPU resources.
 
-## 📌 Project Overview
+## Project goal
 
-User-generated content (UGC) often suffers from poor formatting, grammatical errors, and lack of structure. This project addresses these issues by fine-tuning a **Qwen 2.5 7B** model to act as a professional e-commerce copywriter.
+The model rewrites a title, category context, and original user description into clearer, more structured sales copy while following the facts supplied in the input. The project focuses on a reproducible QLoRA workflow that can be trained on modest cloud GPUs.
 
-The core approach relies on **Knowledge Distillation**: using a powerful "Teacher" model (**DeepSeek V3.2 Speciale**) to generate high-quality training data for a smaller, more efficient "Student" model.
+## Dataset
 
-## 🚀 Key Features
+The training dataset contains approximately 1.5k examples derived from open Avito data. Target descriptions were generated through knowledge distillation with DeepSeek V3.2 Speciale as the teacher model. The prepared dataset is published on [Kaggle](https://www.kaggle.com/datasets/yuriymagus/avito-descriptions-enhanced); a local copy can be placed at `data/descriptions_enhancement_avito.jsonl`.
 
-* **Grammar & Style Correction:** Automatic fixing of typos and syntax errors.
-* **Structured Output:** Generates logical paragraphs and bulleted lists.
-* **E-commerce Optimization:** Adds 1-2 expert sentences about product benefits while maintaining a concise length (40-80 words).
-* **High Efficiency:** Optimized for training and inference on consumer-grade hardware (e.g., NVIDIA T4).
+Each training row contains:
 
-## 🛠 Tech Stack
+- `instruction`
+- `category_context`
+- `title`
+- `original_description`
+- `generated_description`
 
-* **Base Model:** [Qwen 2.5 7B Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
-* **Training:** [Unsloth](https://github.com/unslothai/unsloth) (QLoRA, 4-bit quantization)
-* **Teacher Model:** DeepSeek V3.2 Speciale (via OpenRouter API)
-* **Libraries:** PyTorch, Transformers, PEFT, TRL, Datasets
-* **Metrics:** BERTScore, ROUGE-L, Structure Compliance Rate
+The final 50 rows are held out from gradient updates and used as the validation split.
 
-## 📊 Pipeline Architecture
+## Fine-tuning
 
-### 1. Data Generation (Distillation)
+- Base model: [`Qwen/Qwen2.5-7B-Instruct`](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
+- Method: QLoRA with 4-bit NF4 quantization
+- Stack: Transformers, TRL, PEFT, bitsandbytes, and Datasets
+- Training hardware: 2× NVIDIA Tesla T4
+- Published adapter: [`yuriy-magus/Qwen2.5-7B-Ecom-Refiner`](https://huggingface.co/yuriy-magus/Qwen2.5-7B-Ecom-Refiner)
 
-* Extracted 1,500 raw samples from the Avito Open Dataset.
-* Processed via DeepSeek V3 to create "Golden Targets" following strict editorial guidelines.
-* *Script:* `avito_dataset_gen.py`
+The LoRA configuration uses rank 64, alpha 128, dropout 0.05, and targets the attention and MLP projection layers. Training runs for three epochs with evaluation every 50 steps and selects the best checkpoint by `eval_loss`.
 
-### 2. Fine-Tuning
+## Evaluation
 
-* Applied QLoRA (rank 16) using the **Unsloth** engine, which provided a 2x speedup in training.
-* Trained on a single **NVIDIA T4 GPU** (Kaggle environment) for ~40 minutes.
-* *Script:* `avito_desc_model_fine_tuning.py`
+The deterministic evaluation compares the original base model with the same model plus the published LoRA adapter on the same 50 held-out validation examples. Both paths use the tokenizer stored in the adapter repository, identical leak-free prompts, identical generation settings, and `do_sample=False`. Baseline inference uses PEFT's `disable_adapter()` context, so only one 7B model needs to be loaded.
 
-### 3. Evaluation
+| Metric | Base | Base + LoRA | Relative uplift |
+|---|---:|---:|---:|
+| BERTScore F1 | 0.684 | 0.761 | +11.2% |
+| ROUGE-1 | 0.435 | 0.616 | +41.6% |
+| ROUGE-L | 0.432 | 0.595 | +37.7% |
 
-* Comparative analysis between the Base Model and the Fine-Tuned version.
-* *Script:* `evaluation.py`
+The evaluation implementation also calculates BERTScore Precision and Recall and records absolute deltas. The committed aggregate values are stored in [`results/eval_metrics.json`](results/eval_metrics.json) and [`results/eval_summary.csv`](results/eval_summary.csv), rather than existing only in this README.
 
-## 📂 Repository Structure
+Important limitation: these 50 examples were used as `eval_dataset` during fine-tuning and for best-checkpoint selection. They are therefore a held-out validation set, not an independent test set. No claim is made about factuality, hallucination reduction, format-compliance percentage, or statistical significance.
 
-* `avito_dataset_gen.py`: Script for synthetic data generation via API.
-* `avito_desc_model_fine_tuning.py`: Main training script with Unsloth optimizations.
-* `evaluation.py`: Quantitative assessment of model performance.
-* `requirements.txt`: List of necessary dependencies.
+## Reproduction
+
+Install the direct dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+If a Hugging Face token is required for model or dataset access, copy `.env.example` to `.env` and set `HF_TOKEN` there. The real `.env` file is excluded by `.gitignore`.
+
+Run training only when a new adapter is required:
+
+```bash
+python src/train.py \
+  --data-path data/descriptions_enhancement_avito.jsonl \
+  --output-dir qwen-avito-finetuned \
+  --adapter-output-dir qwen-avito-adapter
+```
+
+Run the deterministic base-vs-adapter evaluation without repeating fine-tuning:
+
+```bash
+python src/evaluation.py \
+  --data-path data/descriptions_enhancement_avito.jsonl \
+  --adapter yuriy-magus/Qwen2.5-7B-Ecom-Refiner \
+  --output-dir results
+```
+
+The adapter and its tokenizer are downloaded from Hugging Face. Evaluation checkpoints all paired base/fine-tuned predictions in `results/eval_predictions.jsonl` and writes the aggregate files in `results/`. A CUDA GPU is required for the 4-bit 7B evaluation path.
+
+For a sampling-based interactive example (separate from deterministic evaluation):
+
+```bash
+python src/inference.py \
+  --category-context "Личные вещи / Одежда" \
+  --title "Зимняя куртка" \
+  --input "Продам теплую куртку, носил один сезон"
+```
+
+## Repository layout
+
+- `notebooks/avito-desc-model-fine-tuning.ipynb` — historical training workflow plus the current deterministic evaluation section
+- `notebooks/avito-fine-tune-new.ipynb` — source notebook for the corrected evaluation methodology
+- `src/train.py` — CLI training entry point
+- `src/evaluation.py` — deterministic paired evaluation and artifact generation
+- `src/inference.py` — sampling-based demo inference
+- `src/data_utils.py` — dataset loading, formatting, and validation split
+- `src/dataset_generation.py` — original knowledge-distillation data generation workflow
+- `results/` — committed aggregate metrics and generated paired predictions after an evaluation run

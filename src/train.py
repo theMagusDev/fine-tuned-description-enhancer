@@ -1,15 +1,41 @@
 import torch
+import argparse
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from dotenv import load_dotenv
 from peft import LoraConfig
-from trl import SFTTrainer, SFTConfig
-from data_utils import load_avito_dataset
+from trl.trainer.sft_config import SFTConfig
+from trl.trainer.sft_trainer import SFTTrainer
+try:
+    from .data_utils import load_avito_dataset
+except ImportError:  # Support ``python src/train.py``.
+    from data_utils import load_avito_dataset
+
+load_dotenv()
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Fine-tune Qwen2.5-7B with QLoRA")
+    parser.add_argument(
+        "--data-path", "--data_path", dest="data_path", required=True, help="Path to .jsonl dataset"
+    )
+    parser.add_argument(
+        "--output-dir",
+        "--output_dir",
+        dest="output_dir",
+        default="./qwen-avito-finetuned",
+        help="Trainer checkpoints directory",
+    )
+    parser.add_argument(
+        "--adapter-output-dir",
+        default="./qwen-avito-adapter",
+        help="Final LoRA adapter and tokenizer directory",
+    )
+    return parser.parse_args()
 
 def train():
+    args = parse_args()
     model_id = "Qwen/Qwen2.5-7B-Instruct"
-    dataset_path = "/kaggle/input/avito-descriptions-enhanced/descriptions_enhancement_avito.jsonl"
-    
-    # Загрузка данных
-    train_ds, test_ds = load_avito_dataset(dataset_path)
+
+    train_ds, test_ds = load_avito_dataset(args.data_path)
 
     # QLoRA конфигурация
     bnb_config = BitsAndBytesConfig(
@@ -44,20 +70,31 @@ def train():
 
     # Настройки SFT
     sft_config = SFTConfig(
-        output_dir="./qwen-avito-finetuned",
+        output_dir=args.output_dir,
         max_length=1024,
         dataset_text_field="text",
+        completion_only_loss=True,
         num_train_epochs=3,
+        lr_scheduler_type="cosine",
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         learning_rate=2e-4,
+        warmup_ratio=0.1,
         eval_strategy="steps",
         eval_steps=50,
         save_strategy="steps",
         save_steps=50,
         load_best_model_at_end=True,
+        metric_for_best_model="eval_loss",
+        greater_is_better=False,
+        save_total_limit=3,
+        logging_steps=10,
+        optim="paged_adamw_32bit",
+        fp16=False,
         bf16=True,
-        report_to="none"
+        gradient_checkpointing=True,
+        report_to="none",
+        remove_unused_columns=False,
     )
 
     trainer = SFTTrainer(
@@ -71,9 +108,9 @@ def train():
     print("--- Начинаем обучение ---")
     trainer.train()
     
-    trainer.model.save_pretrained("qwen-avito-adapter")
-    tokenizer.save_pretrained("qwen-avito-adapter")
-    print("--- Обучение завершено. Адаптер сохранен. ---")
+    trainer.model.save_pretrained(args.adapter_output_dir)
+    tokenizer.save_pretrained(args.adapter_output_dir)
+    print(f"--- Обучение завершено. Адаптер сохранен в {args.adapter_output_dir}. ---")
 
 if __name__ == "__main__":
     train()
